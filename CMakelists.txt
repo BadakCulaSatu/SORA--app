@@ -1,0 +1,41 @@
+cmake_minimum_required(VERSION 3.22)
+
+project(SORA VERSION 1.0.0)
+
+# 1. Download & Include JUCE secara otomatis
+include(FetchContent)
+FetchContent_Declare(
+    juce
+    GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
+    GIT_TAG origin/master
+)
+FetchContent_MakeAvailable(juce)
+
+# 2. Buat App SORA
+juce_add_gui_app(SORA
+    PRODUCT_NAME "SORA"
+    BUNDLE_ID "com.badakculasatu.sora"
+    IS_CONTENT_PREVIEW_TRUE
+    NEEDS_AUDIOPROCESSOR TRUE
+    JUCER_ENABLE_GPL_MODE TRUE
+)
+
+# 3. Setup Target Architecture (Universal Binary)
+set_target_properties(SORA PROPERTIES 
+    OSX_ARCHITECTURES "arm64;x86_64"
+    OSX_DEPLOYMENT_TARGET "10.15"
+)
+
+# 4. Link Source & Libraries
+target_sources(SORA PRIVATE 
+    Source/Main.cpp
+)
+
+target_link_libraries(SORA PRIVATE
+    juce::juce_audio_utils
+    juce::juce_audio_processors
+    juce::juce_gui_extra
+    juce::juce_gui_basics
+)
+
+juce_generate_juce_header(SORA)
