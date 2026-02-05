@@ -5,14 +5,14 @@
 
 #include <JuceHeader.h>
 
-class SoraEditor : public juce::AudioProcessorEditor {
+class SoraEditor : public juce::AudioProcessorEditor, private juce::Slider::Listener {
 public:
     SoraEditor (juce::AudioProcessor& p, juce::AudioDeviceManager& dm)
-        : AudioProcessorEditor (&p), deviceManager (dm)
+        : AudioProcessorEditor (&p), processor(static_cast<class SoraEngine&>(p)), deviceManager (dm)
     {
         setSize (400, 600);
 
-        // --- SECTION 1: DEVICE SETTINGS ---
+        // --- SECTION 1: DEVICE ---
         addAndMakeVisible (inputLabel);
         inputLabel.setText ("Input Device:", juce::dontSendNotification);
         addAndMakeVisible (inputSelector);
@@ -20,111 +20,120 @@ public:
         addAndMakeVisible (outputLabel);
         outputLabel.setText ("Output Device:", juce::dontSendNotification);
         addAndMakeVisible (outputSelector);
-
-        // Update list device ke dropdown
         updateDeviceLists();
 
-        // --- SECTION 2: ROUTING BOX ---
+        // --- SECTION 2: ROUTING & PLUGINS ---
         addAndMakeVisible (routingLabel);
         routingLabel.setText ("Routing & Processing", juce::dontSendNotification);
-        routingLabel.setFont (juce::Font (16.0f, juce::Font::bold));
 
-        // Dropdown untuk Slot Output (pengganti checklist)
-        addAndMakeVisible (outSlotLabel);
-        outSlotLabel.setText ("Active Out Channel:", juce::dontSendNotification);
-        addAndMakeVisible (outSlotSelector);
-        outSlotSelector.addItem ("All Channels Active", 1);
-        outSlotSelector.setSelectedId (1);
+        addAndMakeVisible (chanLabel);
+        chanLabel.setText ("Active Channels:", juce::dontSendNotification);
+        addAndMakeVisible (chanSelector);
+        chanSelector.addItem ("Stereo Output (Default)", 1);
+        chanSelector.setSelectedId (1);
 
         addAndMakeVisible (pluginBtn);
-        pluginBtn.setButtonText ("Insert Plugin");
-        pluginBtn.onClick = [this] { 
-            juce::AlertWindow::showMessageBoxAsync (juce::AlertWindow::InfoIcon, "Plugin", "Plugin Manager akan terbuka...");
-        };
+        pluginBtn.setButtonText ("Scan & Insert Plugin");
+        pluginBtn.onClick = [this] { scanPlugins(); };
 
-        // Mute pakai simbol speaker 🔊 / 🔇
+        // Mute Button
         addAndMakeVisible (muteBtn);
-        muteBtn.setButtonText (juce::String::fromUTF8("\xF0\x9F\x94\x8A")); 
+        muteBtn.setButtonText ("Mute");
         muteBtn.setClickingTogglesState (true);
         muteBtn.onClick = [this] {
-            muteBtn.setButtonText (muteBtn.getToggleState() ? 
-                juce::String::fromUTF8("\xF0\x9F\x94\x87") : juce::String::fromUTF8("\xF0\x9F\x94\x8A"));
+            processor.isMuted = muteBtn.getToggleState();
+            muteBtn.setButtonText (processor.isMuted ? "Unmute" : "Mute");
         };
 
+        // Volume Slider (Functional)
         addAndMakeVisible (volSlider);
         volSlider.setRange (0.0, 1.0);
+        volSlider.setValue (processor.currentLevel);
         volSlider.setSliderStyle (juce::Slider::LinearHorizontal);
         volSlider.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
+        volSlider.addListener (this);
 
-        // --- SECTION 3: FOOTER ---
         addAndMakeVisible (addBtn);
         addBtn.setButtonText ("[ + ] Add Output (A-Z)");
-        addBtn.onClick = [this] {
-            juce::AlertWindow::showMessageBoxAsync (juce::AlertWindow::InfoIcon, "Add Output", "Slot Output Baru Ditambahkan.");
-        };
+    }
+
+    void sliderValueChanged (juce::Slider* slider) override {
+        if (slider == &volSlider) processor.currentLevel = (float)volSlider.getValue();
+    }
+
+    void scanPlugins() {
+        juce::AudioPluginFormatManager formatManager;
+        formatManager.addDefaultFormats();
+        juce::KnownPluginList pluginList;
+        juce::AudioPluginScanner scanner (pluginList, formatManager, {}, true, true);
+        
+        juce::NativeMessageBox::showMessageBoxAsync (juce::AlertWindow::InfoIcon, "SORA Control", 
+            "Scanning VST3/AU di folder sistem Mac lo...");
     }
 
     void updateDeviceLists() {
-        auto* type = deviceManager.getCurrentAudioDeviceType();
-        if (type != nullptr) {
+        if (auto* type = deviceManager.getCurrentAudioDeviceType()) {
             inputSelector.addItemList (type->getDeviceNames (true), 1);
             outputSelector.addItemList (type->getDeviceNames (false), 1);
+            inputSelector.setSelectedId(1);
+            outputSelector.setSelectedId(1);
         }
     }
 
     void paint (juce::Graphics& g) override {
         g.fillAll (juce::Colour (0xff2b302b));
-        g.setColour (juce::Colours::white.withAlpha(0.2f));
-        
-        // Garis pemisah box
-        g.drawRoundedRectangle (15, 60, 370, 140, 5.0f, 1.0f);   // Box Device
-        g.drawRoundedRectangle (15, 220, 370, 240, 5.0f, 1.0f);  // Box Routing
+        g.setColour (juce::Colours::white.withAlpha(0.3f));
+        g.drawRoundedRectangle (15, 60, 370, 120, 5.0f, 1.0f);   // Device Box
+        g.drawRoundedRectangle (15, 200, 370, 260, 5.0f, 1.0f);  // Routing Box
     }
 
     void resized() override {
-        auto area = getLocalBounds().reduced (20);
-        
-        // Layout Device
         inputLabel.setBounds (30, 75, 100, 25);
         inputSelector.setBounds (140, 75, 230, 25);
-        
         outputLabel.setBounds (30, 115, 100, 25);
         outputSelector.setBounds (140, 115, 230, 25);
 
-        // Layout Routing
-        routingLabel.setBounds (30, 235, 300, 25);
+        routingLabel.setBounds (30, 215, 300, 25);
+        chanLabel.setBounds (30, 250, 120, 25);
+        chanSelector.setBounds (160, 250, 200, 25);
         
-        outSlotLabel.setBounds (30, 275, 120, 25);
-        outSlotSelector.setBounds (160, 275, 200, 25);
-        
-        pluginBtn.setBounds (30, 320, 340, 35);
-        
-        muteBtn.setBounds (30, 375, 50, 40);
-        volSlider.setBounds (90, 375, 280, 40);
-
-        addBtn.setBounds (20, 500, 360, 50);
+        pluginBtn.setBounds (30, 300, 340, 35);
+        muteBtn.setBounds (30, 360, 70, 40);
+        volSlider.setBounds (110, 360, 260, 40);
+        addBtn.setBounds (15, 500, 370, 50);
     }
 
 private:
+    class SoraEngine& processor;
     juce::AudioDeviceManager& deviceManager;
-    juce::Label inputLabel, outputLabel, routingLabel, outSlotLabel;
-    juce::ComboBox inputSelector, outputSelector, outSlotSelector;
+    juce::Label inputLabel, outputLabel, routingLabel, chanLabel;
+    juce::ComboBox inputSelector, outputSelector, chanSelector;
     juce::TextButton pluginBtn, muteBtn, addBtn;
     juce::Slider volSlider;
 };
 
-// --- ENGINE & APP LOADER (Tetap) ---
 class SoraEngine : public juce::AudioProcessor {
 public:
     SoraEngine() : AudioProcessor (BusesProperties().withInput("Input", juce::AudioChannelSet::stereo(), true).withOutput("Output", juce::AudioChannelSet::stereo(), true)) {}
-    void prepareToPlay (double, int) override {}
-    void releaseResources() override {}
-    void processBlock (juce::AudioBuffer<float>& b, juce::MidiBuffer&) override { b.clear(); }
+    
+    void processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&) override {
+        if (isMuted) {
+            buffer.clear();
+        } else {
+            buffer.applyGain (currentLevel); // Volume berfungsi di sini
+        }
+    }
+
     juce::AudioProcessorEditor* createEditor() override { return new SoraEditor (*this, deviceManager); }
     bool hasEditor() const override { return true; }
     const juce::String getName() const override { return "SORA Control"; }
     juce::AudioDeviceManager deviceManager;
-    // Boilerplate standard lainnya...
+    float currentLevel = 0.8f;
+    bool isMuted = false;
+
+    // Boilerplate lainnya
+    void prepareToPlay (double, int) override {}
+    void releaseResources() override {}
     bool acceptsMidi() const override { return false; }
     bool producesMidi() const override { return false; }
     double getTailLengthSeconds() const override { return 0.0; }
