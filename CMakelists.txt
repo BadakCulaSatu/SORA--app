@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 
-project("SORA Control" VERSION 0.1.0 LANGUAGES CXX)
+# Nama project di sistem (pakai strip, bukan spasi)
+project(SoraControlProject VERSION 0.1.0 LANGUAGES CXX)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -10,7 +11,9 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(juce)
 
-juce_add_gui_app("SORA Control"
+# Nama target internal: SoraControl (Tanpa Spasi)
+# Nama produk aplikasi: "SORA Control" (Pakai Spasi)
+juce_add_gui_app(SoraControl
     PRODUCT_NAME "SORA Control"
     VERSION "0.1.0"
     BUNDLE_ID "com.badakculasatu.soracontrol"
@@ -18,18 +21,18 @@ juce_add_gui_app("SORA Control"
     JUCER_ENABLE_GPL_MODE TRUE
 )
 
-set_target_properties("SORA Control" PROPERTIES 
+set_target_properties(SoraControl PROPERTIES 
     OSX_ARCHITECTURES "arm64;x86_64"
     OSX_DEPLOYMENT_TARGET "10.15"
 )
 
-target_sources("SORA Control" PRIVATE Source/Main.cpp)
+target_sources(SoraControl PRIVATE Source/Main.cpp)
 
-target_link_libraries("SORA Control" PRIVATE
+target_link_libraries(SoraControl PRIVATE
     juce::juce_audio_utils
     juce::juce_audio_processors
     juce::juce_gui_extra
     juce::juce_gui_basics
 )
 
-juce_generate_juce_header("SORA Control")
+juce_generate_juce_header(SoraControl)
