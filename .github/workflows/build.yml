@@ -1,27 +1,20 @@
-name: Build SORA App
+name: Build SORA Control
 on: [push]
 
 jobs:
   build:
-    name: Build macOS Universal
     runs-on: macos-latest
-
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          submodules: true
 
-      - name: Setup CMake
-        run: brew install cmake
-
-      - name: Configure and Build
+      - name: Build
         run: |
           cmake -B build -G Xcode -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
           cmake --build build --config Release
 
-      - name: Upload Artifact
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: SORA-macOS-Universal
+          name: SORA-Control-App
           path: build/"SORA Control_artefacts"/Release/"SORA Control.app"
