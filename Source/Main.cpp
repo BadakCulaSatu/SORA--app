@@ -34,8 +34,8 @@ public:
 class SoraApp : public juce::JUCEApplication {
 public:
     SoraApp() {}
-    const juce::String getApplicationName() override { return "SORA"; }
-    const juce::String getApplicationVersion() override { return "1.0.0"; }
+    const juce::String getApplicationName() override { return "SORA Control"; }
+    const juce::String getApplicationVersion() override { return "0.1.0"; }
 
     void initialise (const juce::String&) override {
         engine = std::make_unique<SoraEngine>();
