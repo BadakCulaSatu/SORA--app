@@ -1,6 +1,6 @@
 #include <JuceHeader.h>
 
-// --- ENGINE SORA ---
+// --- ENGINE SORA CONTROL ---
 class SoraEngine : public juce::AudioProcessor {
 public:
     SoraEngine() : AudioProcessor (BusesProperties()
@@ -9,15 +9,11 @@ public:
 
     void prepareToPlay (double, int) override {}
     void releaseResources() override {}
-
-    void processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&) override {
-        // Logika Splitter & Plugin Host masuk di sini
-        // Sementara bypass agar sinyal tembus ke output
-    }
+    void processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&) override {}
 
     juce::AudioProcessorEditor* createEditor() override { return new juce::GenericAudioProcessorEditor (*this); }
     bool hasEditor() const override { return true; }
-    const juce::String getName() const override { return "SORA"; }
+    const juce::String getName() const override { return "SORA Control"; }
     bool acceptsMidi() const override { return false; }
     bool producesMidi() const override { return false; }
     double getTailLengthSeconds() const override { return 0.0; }
@@ -30,7 +26,7 @@ public:
     void setStateInformation (const void*, int) override {}
 };
 
-// --- APP CONTROLLER (MENU BAR) ---
+// --- APP CONTROLLER ---
 class SoraApp : public juce::JUCEApplication {
 public:
     SoraApp() {}
@@ -43,8 +39,8 @@ public:
         player.setProcessor (engine.get());
         deviceManager.addAudioCallback (&player);
         
-        // Window kecil buat setup awal (Nanti bisa disembunyiin ke Menu Bar)
-        window = std::make_unique<juce::DocumentWindow> ("SORA", juce::Colours::black, juce::DocumentWindow::allButtons);
+        window = std::make_unique<juce::DocumentWindow> ("SORA Control", 
+            juce::Colours::black, juce::DocumentWindow::allButtons);
         window->setContentOwned (engine->createEditor(), true);
         window->setResizable (true, true);
         window->setVisible (true);
