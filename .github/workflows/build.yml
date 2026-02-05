@@ -3,17 +3,20 @@ on: [push]
 
 jobs:
   build:
-    # Kita ganti ke macos-13 yang merupakan versi terakhir 
-    # yang mendukung rakitan untuk macOS lama secara stabil
-    runs-on: macos-13
+    runs-on: macos-14
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set Xcode Version
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+
       - name: Build
         run: |
-          # Perintah tambahan untuk memaksa Xcode pakai SDK yang lebih rendah
-          cmake -B build -G Xcode -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+          cmake -B build -G Xcode \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 \
+            -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" \
+            -DJUCE_BUILD_EXTRAS=ON
           cmake --build build --config Release
 
       - name: Upload
