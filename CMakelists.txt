@@ -1,9 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 
-# Nama Project dengan tanda kutip karena ada spasi
 project("SORA Control" VERSION 0.1.0 LANGUAGES CXX)
 
-# 1. Download JUCE secara otomatis dari GitHub
 include(FetchContent)
 FetchContent_Declare(
     juce
@@ -12,28 +10,21 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(juce)
 
-# 2. Setup Aplikasi
 juce_add_gui_app("SORA Control"
     PRODUCT_NAME "SORA Control"
     VERSION "0.1.0"
     BUNDLE_ID "com.badakculasatu.soracontrol"
-    IS_CONTENT_PREVIEW TRUE
     NEEDS_AUDIOPROCESSOR TRUE
     JUCER_ENABLE_GPL_MODE TRUE
 )
 
-# 3. Setup Arsitektur Mac (Intel + Apple Silicon)
 set_target_properties("SORA Control" PROPERTIES 
     OSX_ARCHITECTURES "arm64;x86_64"
     OSX_DEPLOYMENT_TARGET "10.15"
 )
 
-# 4. Hubungkan ke file Main.cpp
-target_sources("SORA Control" PRIVATE 
-    Source/Main.cpp
-)
+target_sources("SORA Control" PRIVATE Source/Main.cpp)
 
-# 5. Library yang dibutuhkan SORA
 target_link_libraries("SORA Control" PRIVATE
     juce::juce_audio_utils
     juce::juce_audio_processors
@@ -41,5 +32,4 @@ target_link_libraries("SORA Control" PRIVATE
     juce::juce_gui_basics
 )
 
-# 6. Generate Header otomatis
 juce_generate_juce_header("SORA Control")
