@@ -1,38 +1,26 @@
 cmake_minimum_required(VERSION 3.22)
-
-# Nama project di sistem (pakai strip, bukan spasi)
 project(SoraControlProject VERSION 0.1.0 LANGUAGES CXX)
 
 include(FetchContent)
-FetchContent_Declare(
-    juce
-    GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
-    GIT_TAG origin/master
-)
+FetchContent_Declare(juce GIT_REPOSITORY https://github.com/juce-framework/JUCE.git GIT_TAG origin/master)
 FetchContent_MakeAvailable(juce)
 
-# Nama target internal: SoraControl (Tanpa Spasi)
-# Nama produk aplikasi: "SORA Control" (Pakai Spasi)
 juce_add_gui_app(SoraControl
     PRODUCT_NAME "SORA Control"
     VERSION "0.1.0"
     BUNDLE_ID "com.badakculasatu.soracontrol"
     NEEDS_AUDIOPROCESSOR TRUE
-    JUCER_ENABLE_GPL_MODE TRUE
-)
+    JUCER_ENABLE_GPL_MODE TRUE)
 
 set_target_properties(SoraControl PROPERTIES 
     OSX_ARCHITECTURES "arm64;x86_64"
-    OSX_DEPLOYMENT_TARGET "10.15"
-)
+    OSX_DEPLOYMENT_TARGET "10.15")
 
 target_sources(SoraControl PRIVATE Source/Main.cpp)
-
-target_link_libraries(SoraControl PRIVATE
-    juce::juce_audio_utils
-    juce::juce_audio_processors
-    juce::juce_gui_extra
-    juce::juce_gui_basics
-)
-
+# Tambahkan library audio_processors agar bisa buka VST/AU
+target_link_libraries(SoraControl PRIVATE 
+    juce::juce_audio_utils 
+    juce::juce_audio_processors 
+    juce::juce_gui_extra 
+    juce::juce_gui_basics)
 juce_generate_juce_header(SoraControl)
