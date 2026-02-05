@@ -17,4 +17,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: SORA-Control-App
-          path: build/"SORA Control_artefacts"/Release/"SORA Control.app"
+          # Pakai wildcard (*) biar dia otomatis nemu folder meskipun ada spasi
+          path: build/SoraControl_artefacts/Release/*.app
